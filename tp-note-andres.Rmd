@@ -1,0 +1,71 @@
+---
+title: "TP Noté Programation Statistique 2"
+output: html_document
+---
+## Chargement des packages necessaire.
+```{r message=FALSE, warning=FALSE}
+library(purrr) 
+library(dplyr) 
+library(tidyverse)
+library(ggplot2)
+```
+## Lecture des csv
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+data_extract <- function(d_min = "2020-01-01",d_max = "2024-12-31"){
+date_min <- as.Date(d_min, format = "%Y-%m-%d")
+date_max <- as.Date(d_max, format = "%Y-%m-%d")
+
+# Lister les fichiers
+df <- list.files(path = "C:\\ecole\\exam_data\\stat", pattern = "*.csv", full.names = TRUE) %>%
+  #fichiers par plage de dates
+  keep(~ {
+    date_str <- gsub(".*ventes(.*)\\.csv", "\\1", basename(.x))
+    file_date <- as.Date(date_str, format = "%d-%m-%Y")
+    file_date >= date_min & file_date <= date_max
+  }) %>%
+  map_df(~ read_csv(.x))
+return(df)
+}
+df= data_extract("2020-01-01","2024-12-31")
+donnée=df
+```
+J'ai exécuté avec le code de Lucas car le miens ne fonctionnais pas sur Windows.
+````{r}`
+#file_list <- list.files("C:\\ecole\\exam_data")
+#path <- "C:\\ecole\\exam_data"
+#file_list <- paste0(path, file_list) 
+
+#extract_data_from_file <- function(file) { 
+#data <- read.csv(file, header = TRUE,stringsAsFactors = FALSE) 
+#return(data) 
+#} 
+
+#donnée <- map_df(file_list, extract_data_from_file) 
+
+#str(donnée)
+```
+## Présentation des données
+Les date sont au format de chr et non en date il faut le changer.
+```{r message=FALSE, warning=FALSE,out.width="150%"}
+donnée$date=as.Date(donnée$date)
+donnée %>% mutate(date=as.Date(date)) %>% 
+  ggplot(.,aes(date,nb_de_ventes))+
+  geom_smooth(col="plum3")+
+  geom_vline(aes(xintercept = as.Date("2020-03-17"), color = "Début 1 er confinement du au Covid-19"), linetype = "dashed", size = 1) +
+  geom_vline(aes(xintercept = as.Date("2021-05-03"), color = "Fin du dernier confinement du au Covid-19"), linetype = "dashed", size = 1) +
+  geom_vline(aes(xintercept = as.Date("2022-02-14"), color = "Attaque de Kiev par l'armée Russe"), linetype = "dashed", size = 1) + 
+  scale_color_manual(
+    name = "Légende.",
+    values = c("Début 1 er confinement du au Covid-19" = "rosybrown", "Fin du dernier confinement du au Covid-19" = "rosybrown", "Attaque de Kiev par l'armée Russe" = "darkred")
+  ) +
+  labs(title = "Courbe lissée du nombre de produit vendus de Janvier 2020 à decembre 2024",
+       x = "Temps",
+       y = "Nombre de ventes") +
+  theme_minimal()+
+  theme(plot.title = element_text(size = 12, face = "bold"))
+```
+
+## Analyse
+On remarque que sur le graphe pendant la période des confinements où le covid était un porblème majeur le nombre de vente diminué et une fois le dernier confinement finis les ventes on réaugmenter jusqu'a l'éclatement récent du conflit entre l'uUkraine et la Russie. Puis les ventes ont commencé réaugmenter fin 2022 et tout 2023 surement la periode où le conflit est devenue moins intance et moins contraignant pour la France. Et enfin les valeurs semble variée en 2024 ce qui est surement dû au fait que les valeurs ne sont pas réelles car nous  somme actuellement au cours de cette année et certaines date ne sont pas encore passées.
+
+
